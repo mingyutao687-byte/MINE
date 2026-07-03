@@ -712,7 +712,7 @@ class AsyncLLMEngine:
 
     async def check_and_consume_quota(self, was_being_scheduled):
         if self.worker_info is None:
-            return
+            self.iteration_quota = 1  # no scheduler — run freely
         assert self.iteration_quota >= 0
         if self.iteration_quota == 0:
             async with self.session.post(
