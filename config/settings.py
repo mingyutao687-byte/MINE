@@ -83,6 +83,14 @@ class SchedulerConfig:
     # 'serverlessllm': 兼容 ServerlessLLM 的调度模式
     system: Literal['serverlessllm', 'sota'] = 'sota'
 
+    # --- SLO 参数 ---
+    # TTFT 基线 (秒)
+    TTFT_baseline: float = 0.5 * 0.95          # 0.475 秒
+    # TTFT 上限 (秒)
+    TTFT_max_threshold: float = 8 * 0.95        # 7.6 秒
+    # TPOT 目标 (秒/每个 decode token)
+    TPOT: float = 0.25 * 0.95                   # 0.2375 秒
+
     # --- 资源管理 ---
     # Worker 空闲后保持存活的时间 (秒)，超时后自动清理
     # CPU Worker 始终为 0（立即清理），GPU Worker 默认 1 秒
