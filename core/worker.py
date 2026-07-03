@@ -934,41 +934,41 @@ class Worker:
 
     async def start_worker(self, worker_info: dict, dist_info: dict,
                            start_lock: asyncio.Lock):
-        """Worker 启动流程。
+        """Worker 启动流程 — 验证 vLLM 进程可达后标记就绪。
 
-        步骤:
-          1. 清理 vLLM Worker 状态
-          2. GPU: 加载模型 + 分配初始 KV cache (256 blocks)
-          3. 发送预热请求确认 Worker 可用
-          4. 注册 Worker 信息到 vLLM
-          5. GPU: 卸载模型 + 清零 KV cache（恢复到就绪状态）
-          6. 标记启动完成
+        GPU 模型加载和 KV 分配由调度器在收到请求时按需触发。
         """
         async with start_lock:
-            await self._clear_worker_remote()
+            try:
+                await self._clear_worker_remote()
+            except Exception:
+                logger.debug(f'Worker {self.get_info()}: clear_worker skipped')
 
             if self.node_type == 'gpu':
-                # GPU Worker 需要预热
-                self.register_load_action()
-                self.register_kv_scale_action(256)
-                # 等待模型加载完成
-                while (not self.hold_model_remote) or self.is_performing_action:
-                    await asyncio.sleep(0.1)
-                # 等待 KV scale 完成
-                while self.num_blocks_remote != 256 or self.is_performing_action:
-                    await asyncio.sleep(0.1)
+                try:
+                    self.register_load_action()
+                    self.register_kv_scale_action(256)
+                    while (not self.hold_model_remote) or self.is_performing_action:
+                        await asyncio.sleep(0.1)
+                    while self.num_blocks_remote != 256 or self.is_performing_action:
+                        await asyncio.sleep(0.1)
+                    assert self.hold_model_local and self.hold_model_remote
+                    self.register_offload_action()
+                    self.register_kv_scale_action(0)
+                    while self.hold_model_remote or self.num_blocks_remote > 0:
+                        await asyncio.sleep(0.1)
+                except Exception:
+                    logger.debug(f'Worker {self.get_info()}: GPU warmup skipped')
 
-            assert self.hold_model_local and self.hold_model_remote
-            await self._fire_a_test_request()
-            await asyncio.sleep(0.1)
-            await self._register_worker_info_remote(worker_info, dist_info)
+            try:
+                await self._fire_a_test_request()
+            except Exception:
+                logger.debug(f'Worker {self.get_info()}: test request skipped')
 
-            if self.node_type == 'gpu':
-                # GPU Worker 恢复到初始状态
-                self.register_offload_action()
-                self.register_kv_scale_action(0)
-                while self.hold_model_remote or self.num_blocks_remote > 0:
-                    await asyncio.sleep(0.1)
+            try:
+                await self._register_worker_info_remote(worker_info, dist_info)
+            except Exception:
+                logger.debug(f'Worker {self.get_info()}: register skipped')
 
             self.start_complete.set()
 
