@@ -34,28 +34,32 @@ Client  →  Gateway (:7000)  →  PoolManager  →  Worker  →  vLLM Engine
 │   └── sllm_store/     C++/CUDA gRPC 后端 (pinned memory, DMA)
 │
 ├── tools/              测试脚本 + 工作负载 trace + 可视化
-├── run_gateway.py      一键启动调度网关
-├── run_worker.py       一键启动 vLLM Worker
+├── run_gateway.py      启动调度网关
+├── run_worker.py       启动单个 vLLM Worker
+├── run_cluster.py      一键批量启动集群 (多 GPU 多 Worker)
 └── RUN_GUIDE.md        详细运行指南
 ```
 
 ## 快速开始
 
 ```bash
-# 1. 安装底层包
+# 1. 安装
 cd engine/vllm && pip install -e .
 cd store/sllm_store && pip install -e .
 pip install fastapi uvicorn aiohttp ray
 
-# 2. 配置资源池
-# 编辑 config/a10_pools.py 选择拓扑 (3B×4GPU / 7B×4GPU)
-# 编辑 config/settings.py 指向你的 pools_config
+# 2. 配置 (编辑 config/a10_pools.py 选择拓扑)
 
-# 3. 启动 Worker
+# 3. 一键启动集群 (4 GPU, 每 GPU 2 worker, 含 Gateway)
 export PROJECT_BASE=/path/to/SLINFER
+python run_cluster.py --mode local --model llama-3.2-3b --workers-per-gpu 2
+```
+
+```bash
+# 单 Worker 启动
 python run_worker.py --device gpu --gpu 0 --port 8000 --model $PROJECT_BASE/gpu_models/Llama-3.2-3B-Instruct
 
-# 4. 启动网关
+# 单独启动网关
 python run_gateway.py          # → http://0.0.0.0:7000
 ```
 
