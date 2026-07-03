@@ -1,152 +1,205 @@
-# SLINFER Mine/ 运行指南
+# SLINFER 部署指南
 
-基于 **4× NVIDIA A10 (24GB) + 256GB 主存 + Intel CPU (无 AMX)** 环境。
-代码位于 `SLINFER_core/Mine/` 目录。
+适用于 **4× NVIDIA A10 (24GB) + 256GB 主存 + Intel CPU** 环境。
 
-## 与原版 SLINFER 的目录对应关系
+---
 
-| 原版路径 | Mine/ 中的路径 | 说明 |
-|----------|---------------|------|
-| `SLINFER_core/scheduler/gateway.py` | `Mine/api/gateway.py` | 调度网关 |
-| `SLINFER_core/scheduler/*.py` | `Mine/core/*.py` + `Mine/models/*.py` | 调度核心 (已重构拆分) |
-| `vLLM_modify/vllm/` | `Mine/engine/vllm/` | vLLM 推理引擎 (完整 fork) |
-| `vLLM_modify/csrc/` | `Mine/engine/vllm/csrc/` | CUDA 内核 |
-| `ServerlessLLM_modify/sllm_store/` | `Mine/store/sllm_store/` | 模型快速加载 C++ 后端 |
-| `ServerlessLLM_modify/sllm/` | `Mine/store/sllm/` | ServerlessLLM Python 服务层 |
-| `SLINFER_core/tools/` | `Mine/tools/` | 测试脚本和 trace 数据 |
+## 1. 环境准备
 
-## 0. 环境准备
+### 1.1 克隆仓库
 
 ```bash
-# 设置项目根目录
-export PROJECT_BASE=/ABSOLUTE_PATH/TO/SLINFER
-export MINE_BASE=$PROJECT_BASE/SLINFER_core
+git clone git@github.com:mingyutao687-byte/MINE.git
+cd MINE
+```
 
-# 创建 Conda 环境
-conda create -n slinfer python=3.11
+### 1.2 创建虚拟环境
+
+```bash
+conda create -n slinfer python=3.11 -y
 conda activate slinfer
-
-# GPU 机器: 确认 CUDA
-nvcc --version
 ```
 
-## 1. 安装 ServerlessLLM Store (C++/CUDA)
+### 1.3 确认 CUDA
 
 ```bash
-cd $MINE_BASE/Mine/store/sllm_store
-rm -rf build
-pip install .
+nvcc --version    # 应为 12.x
+nvidia-smi        # 确认 GPU 可见
 ```
 
-验证:
+### 1.4 设置环境变量（写入 ~/.bashrc）
+
 ```bash
-pip list | grep serverless-llm-store
+echo 'export PROJECT_BASE=/path/to/MINE' >> ~/.bashrc
+source ~/.bashrc
 ```
 
-## 2. 安装 vLLM (SLINFER 修改版)
+---
+
+## 2. 安装
 
 ```bash
-cd $MINE_BASE/Mine/engine/vllm
+# vLLM 推理引擎
+cd engine/vllm
 pip install -e .
-```
 
-验证:
-```bash
-python -c "from vllm.entrypoints.openai.api_server import app; print('OK')"
-```
+# ServerlessLLM 模型存储 (C++/CUDA gRPC)
+cd ../store/sllm_store
+pip install -e .
 
-## 3. 安装 Python 依赖
-
-```bash
+# Python 依赖
 pip install fastapi uvicorn aiohttp ray requests websockets websocket-client
+
+# 回到项目根目录
+cd ../..
 ```
 
-## 4. 导出模型
+验证安装：
 
 ```bash
-cd $PROJECT_BASE/huggingface_models
-bash export_gpu_models.sh   # GPU 模型
-# A10 环境下不需要 CPU OpenVINO 模型 (export_cpu_models.sh)
+python -c "import vllm; print(vllm.__file__)"
+python -c "from Mine.api.gateway import app; print('gateway OK')"
 ```
 
-## 5. 配置 Pool (资源池)
+---
 
-编辑 `Mine/config/a10_pools.py` 选择你的部署拓扑:
+## 3. 准备模型
+
+```bash
+# GPU 模型 (HuggingFace 格式)
+mkdir -p gpu_models
+cd gpu_models
+
+# 示例: 下载 Llama-3.2-3B
+huggingface-cli download meta-llama/Llama-3.2-3B-Instruct --local-dir Llama-3.2-3B-Instruct
+
+# 或从已有路径软链接
+ln -s /existing/path/to/model Llama-3.2-3B-Instruct
+
+cd ..
+```
+
+---
+
+## 4. 配置集群
+
+### 4.1 单机 4 GPU + 3B 模型 (推荐)
+
+`config/a10_pools.py` 中已有预置配置，直接使用：
 
 ```python
-# 3B 模型 × 4 GPU (每 GPU 2 worker)
-from Mine.config.a10_pools import POOLS_3B_4GPU_0CPU as MY_POOLS
-
-# 或 7B 模型 × 4 GPU (每 GPU 1 worker)
-from Mine.config.a10_pools import POOLS_7B_4GPU_0CPU as MY_POOLS
+# config/settings.py 末尾
+from Mine.config.a10_pools import POOLS_3B_4GPU_0CPU
+pools_config = POOLS_3B_4GPU_0CPU
 ```
 
-然后在 `Mine/config/settings.py` 中修改:
-```python
-pools_config = MY_POOLS
-```
+### 4.2 自定义拓扑
 
-## 6. 启动
+编辑 `config/a10_pools.py` 添加你自己的配置，然后像上面一样引入。
 
-### 6.1 启动 vLLM Worker (每个 GPU 启动一个或多个)
+---
+
+## 5. 启动
+
+### 5.1 一键启动 (推荐)
 
 ```bash
-cd $MINE_BASE
+# 4 GPU, 每 GPU 2 worker, 自动启动 Gateway
+python run_cluster.py --mode local --model llama-3.2-3b --workers-per-gpu 2
 
-# GPU 0: 启动 2 个 3B Worker (端口 8000, 8001)
-python Mine/run_worker.py --device gpu --gpu 0 --port 8000 --model /path/to/Llama-3.2-3B-Instruct
-python Mine/run_worker.py --device gpu --gpu 0 --port 8001 --model /path/to/Llama-3.2-3B-Instruct
-
-# GPU 1,2,3: 同上...
+# 调试模式: 1 GPU + 4 CPU
+python run_cluster.py --mode debug --model llama-3.2-3b
 ```
 
-### 6.2 启动调度网关
+### 5.2 分步启动
 
 ```bash
-cd $MINE_BASE
-python Mine/run_gateway.py
-# 网关在 http://0.0.0.0:7000 启动
+# 终端1: 逐个启动 GPU Worker
+python run_worker.py --device gpu --gpu 0 --port 8000 --model $PROJECT_BASE/gpu_models/Llama-3.2-3B-Instruct
+python run_worker.py --device gpu --gpu 0 --port 8001 --model $PROJECT_BASE/gpu_models/Llama-3.2-3B-Instruct
+# ... 每个 GPU 启动你需要数量的 worker
+
+# 终端2: 启动调度网关
+python run_gateway.py
 ```
 
-### 6.3 运行测试
+---
+
+## 6. 验证
 
 ```bash
-cd $MINE_BASE/Mine/tools/test
+# 检查网关健康
+curl http://localhost:7000/ping
+
+# 发送测试请求
+curl -X POST http://localhost:7000/v1/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "request_info": {
+      "request_id": "test-001",
+      "model_id": 0,
+      "model_type": "llama-3.2-3b",
+      "input_length": 128,
+      "expect_output_length": 64
+    }
+  }'
+
+# 运行完整测试套件
+cd tools/test
 python test_3B_ultra_lite.py
 ```
 
-## 关键 PYTHONPATH 说明
+---
 
-`run_worker.py` 自动设置:
+## 7. 多机部署
+
+每台 GPU 机器执行步骤 1-4，然后：
+
+```bash
+# 在每台机器上分别启动 (不同 base_port)
+# 机器1: python run_cluster.py --mode local --model llama-3.2-3b --workers-per-gpu 2 --base-port 8000
+# 机器2: python run_cluster.py --mode local --model llama-3.2-3b --workers-per-gpu 2 --base-port 8100
+# ...
+
+# 在网关机器上启动 Gateway (只启动 Gateway，不启动 Worker)
+python run_gateway.py
 ```
-PYTHONPATH=
-  Mine/engine/          → import vllm → Mine/engine/vllm/
-  SLINFER_core/         → import Mine → Mine/
-```
 
-`run_gateway.py` 自动设置:
-```
-PYTHONPATH=
-  SLINFER_core/         → import Mine → Mine/
-  Mine/config_template/ → import pools_info_template
-```
+修改 `config/a10_pools.py` 添加多机节点信息（IP + port）。
 
-## A10 注意事项
+---
 
-1. **模型大小限制**: 单个 A10 (24GB) 最多放 7B 模型 (13GB+KV)。13B 需要跨 GPU 张量并行
-2. **无 AMX**: CPU 推理使用 PyTorch CPU 后端（非 OpenVINO），prefill 速度慢
-3. **建议**: 主力使用 3B/7B，4 GPU 各跑 1-2 个 worker
-4. **block_size**: 保持 16 (与原始 A100 配置相同)
+## 8. 切换调度策略
 
-## 测试不同的系统配置
-
-```python
+```bash
 # ServerlessLLM 模式
-{'system': 'serverlessllm'}
+curl -X POST http://localhost:7000/set_config \
+  -H "Content-Type: application/json" \
+  -d '{"system": "serverlessllm"}'
 
 # SLINFER 原生模式 (GPU only)
-{'system': 'sota', 'enable_cpu': False}
+curl -X POST http://localhost:7000/set_config \
+  -H "Content-Type: application/json" \
+  -d '{"system": "sota", "enable_cpu": false}'
 
-# SLINFER 原生模式 (GPU + CPU)
-{'system': 'sota', 'enable_cpu': True}
+# 查看当前配置
+curl -X POST http://localhost:7000/get_config
 ```
+
+---
+
+## 常见问题
+
+**Q: nvcc 版本不对？**
+```bash
+conda install -c nvidia cuda-toolkit=12.4
+```
+
+**Q: 端口被占用？**
+```bash
+lsof -i :7000-8999    # 查看占用
+kill -9 <PID>          # 释放端口
+```
+
+**Q: GPU 显存不足？**
+减少 `--workers-per-gpu` 参数，3B 模型每 GPU 最多 3 个 worker，7B 最多 1 个。
