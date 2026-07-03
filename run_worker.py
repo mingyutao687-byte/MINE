@@ -70,7 +70,7 @@ if __name__ == "__main__":
     if args.gpu_count:
         procs = []
         for gpu_id in range(args.gpu_count):
-            port = args.base_port + gpu_id
+            port = args.base_port + gpu_id * 100
             proc = start_gpu_worker(gpu_id, port, args.model,
                                     args.block_num, args.max_model_len)
             procs.append(proc)
