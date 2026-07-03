@@ -159,21 +159,21 @@ def start_remote_workers(hosts: list[str], model: str, workers_per_gpu: int,
             )
 
 
-def start_gateway(dry_run: bool) -> subprocess.Popen:
+def start_gateway(dry_run: bool):
     """启动调度网关。"""
-    env = {
-        **os.environ,
-        "PYTHONPATH": os.pathsep.join([
-            str(MINE_PARENT),
-            str(MINE_DIR / "config_template"),
-            os.environ.get("PYTHONPATH", ""),
-        ]),
-    }
-    cmd = f"python -m Mine.api.gateway"
     print(f"\n[Gateway] :7000")
     if not dry_run:
-        proc = subprocess.Popen(shlex.split(cmd), env=env)
-        return proc
+        import uvicorn
+        sys.path.insert(0, str(MINE_PARENT))
+        sys.path.insert(0, str(MINE_DIR / "config_template"))
+        from Mine.api.gateway import app
+        # 在新线程中启动，避免阻塞
+        import threading
+        def _run():
+            uvicorn.run(app, host="0.0.0.0", port=7000, log_level='warning')
+        t = threading.Thread(target=_run, daemon=True)
+        t.start()
+        return t
     return None
 
 

@@ -31,10 +31,8 @@ import uvicorn
 from Mine.models.enums import WorkerHangingReleaseType
 from Mine.core.node import MiniNode
 
-# CLI 参数
-parser = argparse.ArgumentParser()
-parser.add_argument('--port', type=int, required=True)
-args = parser.parse_args()
+# CLI 参数 (仅在直接运行时解析)
+_port = 7001  # 默认端口，被 __main__ 覆盖
 
 # 日志
 logging.basicConfig(
@@ -238,4 +236,7 @@ app.router.lifespan_context = lifespan
 # ====================================================================
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, required=True)
+    args = parser.parse_args()
     uvicorn.run(app, host="0.0.0.0", port=args.port, log_level='warning')
