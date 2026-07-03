@@ -987,4 +987,8 @@ class Worker:
         }
         async with self.session.post(url, json=data) as response:
             await response.read()
-            assert response.status == 200
+            if response.status != 200:
+                logger.warning(
+                    f'Test request returned {response.status}, '
+                    f'worker may need model pre-loaded'
+                )

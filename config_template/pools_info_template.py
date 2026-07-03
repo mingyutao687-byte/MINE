@@ -13,13 +13,6 @@ pools_info_template = {
             'node_label': 'gpu',
             'workers': {
                 0: models_info['llama-3.2-3b'],
-                1: models_info['llama-3.2-3b'],
-                #2: models_info['llama-3.2-3b'],
-                #3: models_info['llama-3.2-3b'],
-                #4: models_info['llama-3.2-3b'],
-                #5: models_info['llama-3.2-3b'],
-                #6: models_info['llama-3.2-3b'],
-                #7: models_info['llama-3.2-3b'],
             },
         },
         1: {
@@ -31,13 +24,6 @@ pools_info_template = {
             'node_label': 'gpu',
             'workers': {
                 0: models_info['llama-3.2-3b'],
-                1: models_info['llama-3.2-3b'],
-                #2: models_info['llama-3.2-3b'],
-                #3: models_info['llama-3.2-3b'],
-                #4: models_info['llama-3.2-3b'],
-                #5: models_info['llama-3.2-3b'],
-                #6: models_info['llama-3.2-3b'],
-                #7: models_info['llama-3.2-3b'],
             },
         },
         2: {
@@ -49,13 +35,6 @@ pools_info_template = {
             'node_label': 'gpu',
             'workers': {
                 0: models_info['llama-3.2-3b'],
-                1: models_info['llama-3.2-3b'],
-                #2: models_info['llama-3.2-3b'],
-                #3: models_info['llama-3.2-3b'],
-                #4: models_info['llama-3.2-3b'],
-                #5: models_info['llama-3.2-3b'],
-                #6: models_info['llama-3.2-3b'],
-                #7: models_info['llama-3.2-3b'],
             },
         },
         3: {
@@ -67,13 +46,6 @@ pools_info_template = {
             'node_label': 'gpu',
             'workers': {
                 0: models_info['llama-3.2-3b'],
-                1: models_info['llama-3.2-3b'],
-                #2: models_info['llama-3.2-3b'],
-                #3: models_info['llama-3.2-3b'],
-                #4: models_info['llama-3.2-3b'],
-                #5: models_info['llama-3.2-3b'],
-                #6: models_info['llama-3.2-3b'],
-                #7: models_info['llama-3.2-3b'],
             },
         },
     },
