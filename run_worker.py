@@ -19,16 +19,14 @@ import argparse
 import subprocess
 import shlex
 
-# 将 Mine/engine/ 加入 Python path（使得 import vllm → Mine/engine/vllm/）
+# PYTHONPATH: 只需让 import Mine 能找到 (vLLM 已通过 pip install -e . 安装)
 _MINE_DIR = os.path.dirname(os.path.abspath(__file__))
-_ENGINE_DIR = os.path.join(_MINE_DIR, 'engine')
-_MINE_CORE = os.path.dirname(_MINE_DIR)
+_MINE_PARENT = os.path.dirname(_MINE_DIR)
 
 ENV = {
     **os.environ,
     'PYTHONPATH': os.pathsep.join([
-        _ENGINE_DIR,          # import vllm → Mine/engine/vllm/
-        _MINE_CORE,        # import Mine → MINE_core/Mine/
+        _MINE_PARENT,         # import Mine
         os.environ.get('PYTHONPATH', ''),
     ]),
     'VLLM_ENGINE_ITERATION_TIMEOUT_S': '3600',
