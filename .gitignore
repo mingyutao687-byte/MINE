@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# C++ / CUDA build artifacts
+*.o
+*.so
+*.a
+*.out
+*.dll
+*.pyd
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.make
+build/
+_build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Conda / venv
+env/
+venv/
+.conda/
+
+# Test outputs
+tools/test/result/
+tools/draw/figures/*.pdf
+tools/draw/figures/*.png
+
+# Logs
+*.log
+output/*.out
+
+# Environment
+.env
