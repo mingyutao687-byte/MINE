@@ -32,7 +32,7 @@ from Mine.core.pool import PoolManager
 
 # 日志配置
 logging.basicConfig(
-    level=logging.WARNING,
+    level=logging.INFO,
     format='%(asctime)s %(levelname)s %(name)s:%(lineno)d %(message)s',
     handlers=[logging.StreamHandler()],
 )
