@@ -1,6 +1,5 @@
 """全局调度配置。
 
-从原 config.py 重构，所有配置项集中管理。
 配置分为三类：
   1. 导入的模板配置（模型路径、模型信息、资源池信息）
   2. 运行时可通过 /set_config API 动态修改的配置
@@ -80,7 +79,7 @@ class SchedulerConfig:
     """
 
     # --- 系统模式 ---
-    # 'sota': SLINFER 原生调度模式
+    # 'sota': MINE 原生调度模式
     # 'serverlessllm': 兼容 ServerlessLLM 的调度模式
     system: Literal['serverlessllm', 'sota'] = 'sota'
 

@@ -1,6 +1,5 @@
 """枚举类型定义 — 调度系统中使用的所有枚举。
 
-从原 worker.py 和 dist_gateway.py 中提取，便于全局引用。
 """
 
 from enum import Enum, auto

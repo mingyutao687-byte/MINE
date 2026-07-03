@@ -1,4 +1,4 @@
-# SLINFER
+# MINE
 
 GPU+CPU 异构 LLM 推理调度系统，支持 DDL 感知调度、KV cache 跨节点迁移、配额控制推理。
 
@@ -27,7 +27,7 @@ Client  →  Gateway (:7000)  →  PoolManager  →  Worker  →  vLLM Engine
 ├── engine/             推理引擎
 │   ├── vllm/           完整 vLLM (CUDA GPU + PyTorch CPU)
 │   ├── core/           KV cache 管理器 + Gloo 传输层
-│   └── api/            SLINFER 自定义端点
+│   └── api/            MINE 自定义端点
 │
 ├── store/              ServerlessLLM 模型存储
 │   ├── sllm/           Python 服务层 (controller, backends, routers)
@@ -51,7 +51,7 @@ pip install fastapi uvicorn aiohttp ray
 # 2. 配置 (编辑 config/a10_pools.py 选择拓扑)
 
 # 3. 一键启动集群 (4 GPU, 每 GPU 2 worker, 含 Gateway)
-export PROJECT_BASE=/path/to/SLINFER
+export PROJECT_BASE=/path/to/MINE
 python run_cluster.py --mode local --model llama-3.2-3b --workers-per-gpu 2
 ```
 

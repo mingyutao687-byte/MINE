@@ -13,7 +13,6 @@ Node 表示集群中的一台物理机器（GPU 服务器或 CPU 服务器），
   3. Batch-aware 回退: 若所有 Worker DDL 都充裕，选 batch 最大的 Worker
   4. 标记 being_scheduled，发送释放事件
 
-原文件: scheduler/node.py, scheduler/dist_gateway.py
 """
 
 import math

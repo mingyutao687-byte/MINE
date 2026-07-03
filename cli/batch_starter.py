@@ -2,8 +2,6 @@
 
 用于一键启动一个节点上的所有 Worker 实例。
 每个 Worker 输出重定向到 output/ 目录下的按时间戳命名的日志文件。
-
-原文件: tools/vllm_batch_starter.py
 """
 
 import argparse

@@ -1,9 +1,9 @@
-"""SLINFER Engine — vLLM 推理引擎的 SLINFER 扩展。
+"""MINE Engine — vLLM 推理引擎的 MINE 扩展。
 
 提供:
   - KVManager: 全局 KV cache 管理器
   - kv_transfer: Gloo+TCP 底层 KV 传输
-  - slinfer_endpoints: 添加到 vLLM API Server 的自定义路由
+  - mine_endpoints: 添加到 vLLM API Server 的自定义路由
 """
 
 from Mine.engine.core.kv_manager import KVManager, KVInfo, kv_manager

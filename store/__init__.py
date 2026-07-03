@@ -1,1 +1,1 @@
-"""SLINFER Store — ServerlessLLM 模型存储集成。"""
+"""MINE Store — ServerlessLLM 模型存储集成。"""

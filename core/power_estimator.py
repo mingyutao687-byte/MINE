@@ -6,7 +6,6 @@
 
 还提供 ServerlessLLM 模式的并发限制查询。
 
-原文件: scheduler/power_estimator.py
 """
 
 from typing import Optional

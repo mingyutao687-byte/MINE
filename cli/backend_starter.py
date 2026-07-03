@@ -3,7 +3,6 @@
 支持 CPU (OpenVINO) 和 GPU (CUDA) 两种后端。
 CPU 模式使用 numactl 绑定 NUMA 节点；GPU 模式使用 CUDA_VISIBLE_DEVICES 选择 GPU。
 
-原文件: tools/vllm_backend_starter.py
 """
 
 import subprocess

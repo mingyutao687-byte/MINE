@@ -1,6 +1,6 @@
 """KV Cache 管理器 — 全局单例，管理跨 Worker 的 KV cache 传输。
 
-这是 SLINFER 对 vLLM 的核心扩展之一。KVManager 维护一个请求级 KV cache 字典，
+这是 MINE 对 vLLM 的核心扩展之一。KVManager 维护一个请求级 KV cache 字典，
 支持:
   - save: Worker 保存请求的 KV cache 到管理器
   - send: 将 KV cache 通过 Gloo 后端发送到另一个 Worker
@@ -17,7 +17,6 @@
             ├── kv_sender 线程: TCP 交换元数据 → Gloo dist.send
             └── kv_receiver 线程: TCP 接收元数据 → Gloo dist.recv
 
-原文件: vLLM_modify/vllm/core/kv_manager.py
 """
 
 import asyncio

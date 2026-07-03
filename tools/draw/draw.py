@@ -83,8 +83,7 @@ systems_linestyle = {
 global_hatch_color = 'white'
 
 systems_label_translation = {
-    'Ours': r'SLINFER',
-    # 'Ours': r'LLM-Mesh',
+    'Ours': r'MINE',
     'sllm+cpu': r'sllm+c',
     'sllm+share': r'sllm+c+s',
     'sllm': r'sllm',

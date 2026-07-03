@@ -1,4 +1,4 @@
-"""SLINFER 主调度网关 — 基于 FastAPI 的 HTTP 服务 (端口 7000)。
+"""MINE 主调度网关 — 基于 FastAPI 的 HTTP 服务 (端口 7000)。
 
 提供以下核心 API:
   - POST /ask_for_quota: Worker 向调度器请求执行配额
@@ -11,8 +11,6 @@
 
 架构:
   Gateway (FastAPI) → PoolManager → Pool → Node → Worker → HTTP → vLLM Worker
-
-原文件: scheduler/gateway.py
 """
 
 import asyncio

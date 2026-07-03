@@ -9,7 +9,6 @@ PoolManager: 全局资源管理器，协调 CPU Pool 和 GPU Pool 的调度
   3. 分配全新 Worker (allocate_worker_for_request)
   4. 激活请求 + KV 扩容 + 发送请求
 
-原文件: scheduler/pool.py
 """
 
 import asyncio

@@ -1,22 +1,15 @@
-"""Mine — SLINFER GPU+CPU 异构 LLM 推理调度系统（完整重构版）。
+"""MINE — GPU+CPU 异构 LLM 推理调度系统。
 
-针对 4× NVIDIA A10 (24GB) + 256GB 主存 + Intel CPU (无 AMX) 环境优化。
-
-基于原始 SLINFER 三组件重构:
-  - SLINFER_core/scheduler/  →  Mine/scheduler/  (调度器)
-  - vLLM_modify/              →  Mine/engine/     (推理引擎扩展)
-  - ServerlessLLM_modify/     →  Mine/store/      (模型存储集成)
-
-移除的组件:
-  - OpenVINO (需要 Intel AMX)
-  - TPU, XPU, Neuron (需要专用硬件)
-  - AMD ROCm 特定代码 (仅保留 NVIDIA CUDA + 通用 CPU)
+针对 4× NVIDIA A10 (24GB) + 256GB 主存 + Intel CPU (无 AMX) 环境。
 
 包结构:
-  scheduler/         — 调度器 (Gateway, Pool, Node, Worker, ReqTracker)
-  engine/            — vLLM 推理引擎扩展 (KVManager, KV Transfer, SLINFER API)
-  store/             — ServerlessLLM 模型存储集成
-  config/            — A10 GPU 资源池配置
+  models/            — 数据模型: 枚举, Action, ReqTracker, Schema
+  core/              — 核心调度: Worker, Node, Pool, PowerEstimator
+  api/               — HTTP API: Gateway, DistGateway
+  config/            — 运行时配置 + A10 资源池配置
+  cli/               — 命令行工具: Worker 启动器
+  engine/            — vLLM 推理引擎 (CUDA + CPU, KV Manager, KV Transfer)
+  store/             — ServerlessLLM 模型存储 (C++/CUDA gRPC)
   config_template/   — Pool/Model 配置模板
   tools/             — 测试与工具
 """

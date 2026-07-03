@@ -9,7 +9,6 @@ ReqTracker 跟踪一个推理请求从创建到完成的全过程：
   4. 终止: 正常完成 (output_length == expect_output_length) 或被驱逐 (evict)
   5. 指标收集: get_e2e_metrics() 返回 TTFT、TPOT 等端到端指标
 
-原文件: scheduler/request_info.py
 """
 
 import asyncio

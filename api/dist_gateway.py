@@ -1,4 +1,4 @@
-"""SLINFER 分布式调度网关 — 每 CPU 节点本地运行的调度器。
+"""MINE 分布式调度网关 — 每 CPU 节点本地运行的调度器。
 
 与主 Gateway 的区别:
   - 仅管理单个 CPU 节点的 Worker
@@ -14,7 +14,6 @@
   - POST /update_system_config: 更新配置
   - WebSocket /ws/update_ddl: 实时 DDL 更新通道
 
-原文件: scheduler/dist_gateway.py
 """
 
 import asyncio

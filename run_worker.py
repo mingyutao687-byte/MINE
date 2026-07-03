@@ -22,20 +22,20 @@ import shlex
 # 将 Mine/engine/ 加入 Python path（使得 import vllm → Mine/engine/vllm/）
 _MINE_DIR = os.path.dirname(os.path.abspath(__file__))
 _ENGINE_DIR = os.path.join(_MINE_DIR, 'engine')
-_SLINFER_CORE = os.path.dirname(_MINE_DIR)
+_MINE_CORE = os.path.dirname(_MINE_DIR)
 
 ENV = {
     **os.environ,
     'PYTHONPATH': os.pathsep.join([
         _ENGINE_DIR,          # import vllm → Mine/engine/vllm/
-        _SLINFER_CORE,        # import Mine → SLINFER_core/Mine/
+        _MINE_CORE,        # import Mine → MINE_core/Mine/
         os.environ.get('PYTHONPATH', ''),
     ]),
     'VLLM_ENGINE_ITERATION_TIMEOUT_S': '3600',
 }
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Start a vLLM worker with SLINFER patches')
+    parser = argparse.ArgumentParser(description='Start a vLLM worker with MINE patches')
     parser.add_argument('--device', required=True, choices=['cpu', 'gpu'])
     parser.add_argument('--port', type=int, required=True)
     parser.add_argument('--model', type=str, required=True)

@@ -1,6 +1,6 @@
-"""SLINFER vLLM API 端点 — 添加到 vLLM OpenAI API Server 的自定义路由。
+"""MINE vLLM API 端点 — 添加到 vLLM OpenAI API Server 的自定义路由。
 
-这些端点使 SLINFER 调度器能够控制 vLLM Worker 的:
+这些端点使 MINE 调度器能够控制 vLLM Worker 的:
   - 生命周期: register_worker, clear_worker
   - 模型管理: load_model, offload_model
   - KV Cache 管理: kv_scale, kv_info, kv_send, kv_receive
@@ -9,10 +9,9 @@
 
 集成方式:
   在 vllm/entrypoints/openai/api_server.py 的 build_app() 中:
-    1. 导入: from Mine.engine.api.slinfer_endpoints import create_slinfer_router
-    2. 注册: app.include_router(create_slinfer_router(engine, kv_manager))
+    1. 导入: from Mine.engine.api.mine_endpoints import create_mine_router
+    2. 注册: app.include_router(create_mine_router(engine, kv_manager))
 
-原文件: vLLM_modify/vllm/entrypoints/openai/api_server.py (lines 174-268)
 """
 
 import asyncio
@@ -25,17 +24,17 @@ from fastapi.responses import JSONResponse
 logger = logging.getLogger(__name__)
 
 
-def create_slinfer_router(engine, kv_manager) -> APIRouter:
-    """创建包含所有 SLINFER 自定义端点的 FastAPI Router。
+def create_mine_router(engine, kv_manager) -> APIRouter:
+    """创建包含所有 MINE 自定义端点的 FastAPI Router。
 
     Args:
-        engine: AsyncLLMEngine 实例（需包含 SLINFER 扩展方法）
+        engine: AsyncLLMEngine 实例（需包含 MINE 扩展方法）
         kv_manager: KVManager 全局单例
 
     Returns:
         配置好的 APIRouter，可被 vLLM 主应用挂载
     """
-    router = APIRouter(prefix="/slinfer", tags=["SLINFER"])
+    router = APIRouter(prefix="/mine", tags=["MINE"])
 
     # ================================================================
     # Worker 生命周期

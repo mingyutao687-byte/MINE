@@ -1,6 +1,6 @@
 """KV Cache 传输层 — 基于 Gloo + TCP 的跨进程 KV tensor 传输。
 
-这是 SLINFER 实现 CPU↔GPU 请求迁移的底层传输机制。
+这是 MINE 实现 CPU↔GPU 请求迁移的底层传输机制。
 
 传输协议:
   1. Sender 通过 TCP socket 发送元数据 (pickle, ≤32KB):
@@ -13,7 +13,6 @@
   - TCP: 交换元数据（tensor shape、request_id），实现握手
   - Gloo: PyTorch 的 CPU 分布式后端，支持高效的跨进程 tensor 传输
 
-原文件: vLLM_modify/vllm/core/kv_transfer.py
 """
 
 import socket

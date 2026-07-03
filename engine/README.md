@@ -1,11 +1,11 @@
-# SLINFER Engine — vLLM 扩展层
+# MINE Engine — vLLM 扩展层
 
-本目录包含 SLINFER 对 vLLM 推理引擎的所有修改。这些修改将标准 vLLM
+本目录包含 MINE 对 vLLM 推理引擎的所有修改。这些修改将标准 vLLM
 转变为一个支持 GPU+CPU 异构调度、KV cache 迁移和配额控制推理的分布式系统。
 
 ## 修改概览
 
-SLINFER 修改了 vLLM 的以下 22 个文件（基于 v0.5.x 分支）:
+MINE 修改了 vLLM 的以下 22 个文件（基于 v0.5.x 分支）:
 
 ### 新增文件 (2 个)
 

@@ -1,6 +1,5 @@
 """Worker Action 类定义 — 所有可发送给 Worker 的异步操作。
 
-从原 worker.py 中提取，每个 Action 代表一个需要 Worker 执行的异步任务。
 Action 通过 Node.worker_action_monitor 进行排队和内存预算检查后分发执行。
 
 Action 生命周期:

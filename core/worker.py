@@ -1,6 +1,6 @@
 """Worker 工作进程抽象 — 调度系统中对单个 vLLM 推理实例的代理。
 
-Worker 是 SLINFER 调度系统的核心抽象单元。每个 Worker 对应一个运行在
+Worker 是 MINE 调度系统的核心抽象单元。每个 Worker 对应一个运行在
 CPU 或 GPU 节点上的 vLLM 推理进程（OpenAI-compatible API server）。
 
 核心职责:
@@ -21,7 +21,6 @@ Action 系统设计:
 
   版本控制: 每个 Action 有唯一的 action_version，用于检测和丢弃过时的 Action。
 
-原文件: scheduler/worker.py
 """
 
 import asyncio

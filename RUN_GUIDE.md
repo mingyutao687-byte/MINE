@@ -1,4 +1,4 @@
-# SLINFER 部署指南
+# MINE 部署指南
 
 适用于 **4× NVIDIA A10 (24GB) + 256GB 主存 + Intel CPU** 环境。
 
@@ -16,8 +16,8 @@ cd MINE
 ### 1.2 创建虚拟环境
 
 ```bash
-conda create -n slinfer python=3.11 -y
-conda activate slinfer
+conda create -n mine python=3.11 -y
+conda activate mine
 ```
 
 ### 1.3 确认 CUDA
@@ -177,7 +177,7 @@ curl -X POST http://localhost:7000/set_config \
   -H "Content-Type: application/json" \
   -d '{"system": "serverlessllm"}'
 
-# SLINFER 原生模式 (GPU only)
+# MINE 原生模式 (GPU only)
 curl -X POST http://localhost:7000/set_config \
   -H "Content-Type: application/json" \
   -d '{"system": "sota", "enable_cpu": false}'

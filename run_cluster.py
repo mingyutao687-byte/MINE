@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""SLINFER 集群一键启动 — 支持多 GPU 机器批量启动 Worker + Gateway。
+"""MINE 集群一键启动 — 支持多 GPU 机器批量启动 Worker + Gateway。
 
 用法:
   # 单机模式 (4 GPU, 每 GPU 2 worker)
@@ -178,7 +178,7 @@ def start_gateway(dry_run: bool) -> subprocess.Popen:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="SLINFER cluster launcher")
+    parser = argparse.ArgumentParser(description="MINE cluster launcher")
     parser.add_argument("--mode", choices=["local", "cluster", "debug"], default="local",
                        help="local=单机多GPU, cluster=SSH多机, debug=1GPU+1CPU")
     parser.add_argument("--model", default="llama-3.2-3b",
@@ -215,7 +215,7 @@ def main():
     if block_num is None:
         block_num = MODEL_PRESETS.get(args.model, {}).get("block_num", 256)
 
-    print(f"=== SLINFER Cluster Launcher ===")
+    print(f"=== MINE Cluster Launcher ===")
     print(f"  Mode: {args.mode}, Model: {args.model}, Workers/GPU: {args.workers_per_gpu}")
     print(f"  Model path: {model_path}")
     if args.dry_run:
