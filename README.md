@@ -45,7 +45,7 @@ Client  →  Gateway (:7000)  →  PoolManager  →  Worker  →  vLLM Engine
 ```bash
 # 1. 安装
 cd engine/vllm && pip install -e .
-cd store/sllm_store && pip install -e .
+cd ../../store/sllm_store && pip install -e .
 pip install fastapi uvicorn aiohttp ray
 
 # 2. 配置 (编辑 config/a10_pools.py 选择拓扑)

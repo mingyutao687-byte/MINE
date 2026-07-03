@@ -40,18 +40,16 @@ source ~/.bashrc
 
 ```bash
 # vLLM 推理引擎
-cd engine/vllm
-pip install -e .
+cd engine/vllm && pip install -e .
 
 # ServerlessLLM 模型存储 (C++/CUDA gRPC)
-cd ../store/sllm_store
-pip install -e .
+cd ../../store/sllm_store && pip install -e .
 
 # Python 依赖
 pip install fastapi uvicorn aiohttp ray requests websockets websocket-client
 
 # 回到项目根目录
-cd ../..
+cd /tmp/MINE
 ```
 
 验证安装：
