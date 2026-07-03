@@ -69,10 +69,6 @@ def get_attn_backend(
         logger.info("Using Flashinfer backend.")
         from vllm.attention.backends.flashinfer import FlashInferBackend
         return FlashInferBackend
-    elif backend == _Backend.PALLAS:
-        logger.info("Using Pallas backend.")
-        from vllm.attention.backends.pallas import PallasAttentionBackend
-        return PallasAttentionBackend
     else:
         raise ValueError("Invalid attention backend.")
 
@@ -106,12 +102,7 @@ def which_attn_to_use(
             logger.info("Cannot use %s backend on CPU.", selected_backend)
         return _Backend.TORCH_SDPA
 
-    # OpenVINO, XPU, TPU branches removed — not needed for NVIDIA+CPU
-
-    if is_tpu():
-        if selected_backend != _Backend.PALLAS:
-            logger.info("Cannot use %s backend on TPU.", selected_backend)
-        return _Backend.PALLAS
+    # TPU/OpenVINO/XPU not supported — removed
 
     if is_hip():
         # AMD GPUs.
