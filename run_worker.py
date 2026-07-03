@@ -1,16 +1,15 @@
 #!/usr/bin/env python
-"""vLLM Worker 启动器 — 设置正确的 PYTHONPATH 后启动 vLLM API server。
-
-Mine/engine/vllm/ 是一个完整的 vLLM fork，但其 import 使用 `from vllm.xxx`
-而非 `from Mine.engine.vllm.xxx`。因此需要将 Mine/engine/ 加入 PYTHONPATH
-使得 `import vllm` 解析到 Mine/engine/vllm/。
+"""vLLM Worker 启动器。
 
 用法:
-  # GPU Worker (CUDA)
-  python Mine/run_worker.py --device gpu --gpu 0 --port 8000 --model /path/to/model
+  # 在所有 GPU 上各启动 1 个 Worker (一键)
+  python run_worker.py --gpu-count 4 --model /path/to/model
 
-  # CPU Worker (PyTorch CPU, 无 OpenVINO)
-  python Mine/run_worker.py --device cpu --port 8400 --model /path/to/model --numa 0 --kv_gb 32
+  # 指定单 GPU
+  python run_worker.py --gpu 0 --port 8000 --model /path/to/model
+
+  # CPU Worker
+  python run_worker.py --device cpu --port 8400 --model /path/to/model --numa 0 --kv_gb 32
 """
 
 import sys
@@ -18,61 +17,96 @@ import os
 import argparse
 import subprocess
 import shlex
+import time
+import signal
 
-# PYTHONPATH: 只需让 import Mine 能找到 (vLLM 已通过 pip install -e . 安装)
 _MINE_DIR = os.path.dirname(os.path.abspath(__file__))
 _MINE_PARENT = os.path.dirname(_MINE_DIR)
 
-ENV = {
+BASE_ENV = {
     **os.environ,
     'PYTHONPATH': os.pathsep.join([
-        _MINE_PARENT,         # import Mine
+        _MINE_PARENT,
         os.environ.get('PYTHONPATH', ''),
     ]),
     'VLLM_ENGINE_ITERATION_TIMEOUT_S': '3600',
 }
 
+
+def start_gpu_worker(gpu_id: int, port: int, model: str, block_num: int,
+                     max_model_len: int) -> subprocess.Popen:
+    env = {**BASE_ENV, 'CUDA_VISIBLE_DEVICES': str(gpu_id),
+           'NO_MODEL_LOADING_AT_START': 'True'}
+    block_override = f'--num-gpu-blocks-override {block_num}' if block_num >= 0 else ''
+    cmd = (f'python -m vllm.entrypoints.openai.api_server '
+           f'--port {port} --max-model-len {max_model_len} '
+           f'--model {model} --enforce-eager '
+           f'--gpu-memory-utilization 0.975 --block-size 16 '
+           f'{block_override}')
+    print(f'  [GPU {gpu_id}] :{port}  {model}')
+    return subprocess.Popen(shlex.split(cmd), env=env,
+                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Start a vLLM worker with MINE patches')
-    parser.add_argument('--device', required=True, choices=['cpu', 'gpu'])
-    parser.add_argument('--port', type=int, required=True)
+    parser = argparse.ArgumentParser(description='Start vLLM worker(s)')
+    parser.add_argument('--device', default='gpu', choices=['cpu', 'gpu'])
+    parser.add_argument('--gpu-count', type=int, default=None,
+                       help='Number of GPUs — starts one worker per GPU')
+    parser.add_argument('--port', type=int, default=None,
+                       help='Port (auto-assigned if --gpu-count used)')
+    parser.add_argument('--base-port', type=int, default=8000,
+                       help='Starting port when using --gpu-count')
     parser.add_argument('--model', type=str, required=True)
-    parser.add_argument('--gpu', type=int, default=None)
+    parser.add_argument('--gpu', type=int, default=None,
+                       help='Single GPU ID (ignored if --gpu-count used)')
     parser.add_argument('--numa', type=int, default=None)
     parser.add_argument('--kv_gb', type=int, default=None)
     parser.add_argument('--block_num', type=int, default=256)
     parser.add_argument('--max_model_len', type=int, default=4096)
-    parser.add_argument('--no_load', action='store_true', default=True,
-                       help='Do not load model at startup (GPU only)')
     args = parser.parse_args()
 
+    # --- GPU count mode: start workers on all GPUs ---
+    if args.gpu_count:
+        procs = []
+        for gpu_id in range(args.gpu_count):
+            port = args.base_port + gpu_id
+            proc = start_gpu_worker(gpu_id, port, args.model,
+                                    args.block_num, args.max_model_len)
+            procs.append(proc)
+        print(f'\nStarted {len(procs)} GPU workers. Ctrl+C to stop all.')
+        try:
+            for p in procs:
+                p.wait()
+        except KeyboardInterrupt:
+            print('\nStopping all...')
+            for p in procs:
+                p.kill()
+            for p in procs:
+                p.wait()
+            print('All stopped.')
+        sys.exit(0)
+
+    # --- Single worker mode ---
     if args.device == 'gpu':
-        assert args.gpu is not None, '--gpu required for GPU mode'
-        ENV['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
-        ENV['NO_MODEL_LOADING_AT_START'] = 'True'
-        block_override = f'--num-gpu-blocks-override {args.block_num}' if args.block_num >= 0 else ''
-        cmd = (
-            f'python -m vllm.entrypoints.openai.api_server '
-            f'--port {args.port} --max-model-len {args.max_model_len} '
-            f'--model {args.model} --enforce-eager '
-            f'--gpu-memory-utilization 0.975 --block-size 16 '
-            f'{block_override}'
-        )
+        assert args.gpu is not None, '--gpu or --gpu-count required'
+        assert args.port is not None, '--port required'
+        proc = start_gpu_worker(args.gpu, args.port, args.model,
+                                args.block_num, args.max_model_len)
     elif args.device == 'cpu':
-        assert args.kv_gb is not None, '--kv_gb required for CPU mode'
-        ENV['VLLM_OPENVINO_KVCACHE_SPACE'] = str(args.kv_gb)
+        assert args.port is not None, '--port required'
+        assert args.kv_gb is not None, '--kv_gb required'
+        env = {**BASE_ENV, 'VLLM_OPENVINO_KVCACHE_SPACE': str(args.kv_gb)}
         numa_cmd = ''
         if args.numa is not None and args.numa >= 0:
             numa_cmd = f'numactl --cpunodebind={args.numa} --membind={args.numa}'
-        cmd = (
-            f'{numa_cmd} python -m vllm.entrypoints.openai.api_server '
-            f'--port {args.port} --max-model-len {args.max_model_len} '
-            f'--model {args.model}'
-        )
+        cmd = (f'{numa_cmd} python -m vllm.entrypoints.openai.api_server '
+               f'--port {args.port} --max-model-len {args.max_model_len} '
+               f'--model {args.model}')
+        print(f'  [CPU] :{args.port}  {args.model}')
+        proc = subprocess.Popen(shlex.split(cmd), env=env,
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    print(f'Starting vLLM worker: {cmd}')
-    print(f'PYTHONPATH={ENV["PYTHONPATH"]}')
-    proc = subprocess.Popen(shlex.split(cmd), env=ENV)
     try:
         proc.wait()
     except KeyboardInterrupt:
